@@ -1,13 +1,13 @@
-### GiftRocket Embed
+### Embed
 -----
 
 Add flexible payouts to your application with a few lines of javascript.
 
 ### Overview
 
-The GiftRocket Embed client SDK is the easiest way to add rewards and incentives to your product, while maintaining full control of your user experience.  Within your application, end-users are presented with a white-labeled UI.
+The Embed client SDK is the easiest way to add rewards and incentives to your product, while maintaining full control of your user experience.  
 
-Through this module, they can choose to receive funds from among a wide set of options, including <b>direct bank deposit (ACH), PayPal, Visa prepaid cards, and popular brand gift cards</b>. This set of choices is programmatically configurable through the client SDK.
+Within your application, end-users are presented with a white-labeled interface wherein they can choose to receive funds from among a wide set of options. This payout set includes <b>direct bank deposit (ACH), PayPal, Visa prepaid cards, and popular brand gift cards</b>. This catalog is programmatically configurable through the client SDK.
 
 
 ### Access
@@ -28,39 +28,31 @@ You can get started immediately with your integration using our sandbox environm
 
 ```html
 <script type="text/javascript">
-  // Available within the GiftRocket dashboard's API settings tab.
+  // The sandbox public_key displayed within the GiftRocket dashboard's API settings tab.
   publicKey = "[MY_PUBLIC_KEY]";
 
   // Use Reward.env.SANDBOX during development
   // vs Reward.env.PRODUCTION when you move to production.
-  var env = Reward.env.SANDBOX;
-  var reward = Reward(publicKey, env);
+  var reward = Reward(publicKey, Reward.env.SANDBOX);
 
   // Launch the rewards modal within your webpage.
   // In this case, we trigger the modal on a button click.
   $("button#launchpad").on("click", function() {
 
-  // Each reward requires a unique externalId which should map
-  // to a UUID within your application for a given gift.
-  var externalId = "[UUID]";
+  // Each reward requires a unique JWT token.  
+  // See the token generation step outlined below.
+  var jwt = "[token]";
 
   reward.redeem(
-    externalId,
+    jwt,
     {
-      gift: {
-        amount: 30,
-        // If no recipient information is passed as configuration
-        // the modal will require that the user input their
-        // name and email address in the checkout flow.
-        recipient: {
-          email: "my_user@application.com",
-          name: "User Name"
-        },
-        // As the developer, you can either omit the catalog property
-        // to allow your recipient to choose among all enabled
-        // redemption options (i.e. ACH, Visa prepaid card, merchant gift cards)
-        // Or, you can limit their options to a subset of choices.
-        catalog: ["A2J05SWPI2QG", "HX4U3DQX6GSA", "ET0ZVETV5ILN", "O7VZ5WQOCUQM", "KV934TZ93NQM"]
+      // As the developer, you can either omit the catalog property
+      // to allow your recipient to choose among all enabled
+      // redemption options (i.e. ACH, Visa prepaid card, merchant gift cards)
+      // Or, you can limit their options to a subset of choices.
+      // Go to https://www.giftrocket.com/rewards/catalog-ids to view the entire catalog.
+      config: {
+        catalog: ["A2J05SWPI2QG", "HX4U3DQX6GSA", "ET0ZVETV5ILN", "O7VZ5WQOCUQM"]
       },
 
       onLoad: function(state) {
@@ -73,49 +65,63 @@ You can get started immediately with your integration using our sandbox environm
       onError: function(err) {
         console.log(JSON.stringify(err))
       },
-      onSuccess: function(gift) {
-        console.log(gift.externalId);
-        // Send this ID to your backend to approve the gift
-        // via the rest API.  Once approved, the transaction will
-        // executed and the user will receive their reward.
+      onSuccess: function(results) {
+        // `results.id` is the unique gift ID within the GiftRocket system.
+        // Send it to your backend to associate it with your database record
+        // for your reward.
+        console.log(results.id);
       }
     });
   });
   </script>
 ```
 
-## Reward.redeem Parameters
+### JWT
 
-#### ExternalId
+Each redeem call must include a unique JWT (json web token).  This guarantees idempotence -- only a single gift will ever be created for a given token.  Through the JWT standard (RFC 7519), we can secure this client and prevent abuse.
 
-Each redeem call must include a unique externalId.  This guarantees that only a single gift will ever be created for a given externalId, preventing any possible errors or abuse that could produce duplicate rewards.
+You should create a JWT in your backend and pass it to the `reward` method as the first paramter.  Our Ruby, Python, and Node client libraries each contain a tokenize function which will create the JWT for you. For all other languages, you can find a JWT library at [https://jwt.io](https://jwt.io). 
 
-When redeem is called with a previously created externalId is revisited, the module will automatically redirect to the payout details page, allowing the user to view the status of their reward.
+In the ruby client, the tokenize call looks like the following:
 
-#### Gift
+```ruby
+  require 'jwt'
+
+  payload = {
+    amount: 50, // Required: an integer for your denomination
+    external_id: "[UUID]",  // Required: unique string for your reward as stored in your system
+    recipient: {
+      name: "[RECIPIENT_NAME]",  // Optional: string
+      email: "[RECIPIENT_EMAIL]",  // Optional: string
+    }
+  }
+
+  // We encrypt the token using our sandbox or production GiftRocket api key.
+  token = JWT.encode(
+    payload,
+    "[GIFTROCKET_SANDBOX_PRIVATE_KEY]",
+    'HS256'  // Cryptographically sign with HS256 - HMAC using SHA-256 hash algorithm
+  )
+```
+
+### config
 
 | Property  | Required  | Type        | Description |
 |-----------|-----------|-------------|-------------|
-| amount    |  Yes      | `Int`       | A whole number, greater than 0 and less than 1,000 |
-| recipient |  No       | `Object`      | For compliance and security purposes, GiftRocket requires the email address and name of rewards recipients.   The developer can pass this information via the `name` and `email` properties of the recipient object or, alternatively, the user will be presented with corresponding inputs during the redemption flow. |
-| catalog |  No         | `Array`     | By default, their entire GiftRocket rewards catalog will be presented as redemption options to your user.  To constrain this set, pass an array of catalog IDs as the `catalog` property within the gift configuration. |
+| catalog |  No         | `Array`     | By default, the entire GiftRocket rewards catalog will be presented as redemption options to your user.  To constrain this set, pass an array of catalog IDs as the config objects `catalog` property. You can view the entire catalog [here](https://www.giftrocket.com/rewards/catalog-ids).|
 
-
-### Events
-
-The client library will emit events on state change.
 
 #### onLoad
 
-Triggered when the client is successfully mounted.  Passed a single object (the reward) to the handler as a parameter.
+Triggered when the client is successfully mounted.  Passed a single config object to the handler as a parameter.
 
 #### onSuccess
 
-Triggered when the user completes their redemption selection.  For security purposes, all rewards created through this client SDK must be confirmed on the back-end via the GiftRocket REST API.  The gift object passed to the onSuccess will contain an `id` property which should be passed to your backend and then POST-ed to the GiftRocket REST API to approve the reward.
+Triggered when the user completes their redemption selection. The object passed to the onSuccess handler will contain an `id` property which is the ID of the reward within the GiftRocket system.  You should pass this ID to your back-end to associate it with your internal UUID for the reward.
 
 #### onError
 
-Triggered on any error within the client.  Passed a single error object to the handler as a parameter.
+Triggered on any error within the client.  An error object is passed to the handler as a parameter.
 
 #### onExit
 
@@ -124,4 +130,4 @@ Triggered when the user manually closes the client.
 
 ## REST API Integration
 
-At minimum, the REST integration can be limited to approving rewards generated through the client SDK. This will execute the transaction created by the client [(view the approval REST endpoint)](https://www.giftrocket.com/docs).
+At minimum, the embedded SDK does not require any integration with the GiftRocket REST API.  However, an integration may be helpful for fetching historical orders, adding webhooks, etc.  To learn more, [view the REST documentation](https://www.giftrocket.com/docs).
