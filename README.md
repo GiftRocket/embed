@@ -1,4 +1,4 @@
-### Embed
+### GiftRocket Embed
 -----
 
 Add flexible payouts to your application with a few lines of javascript.
@@ -41,7 +41,7 @@ You can get started immediately with your integration using our sandbox environm
 
   // Each reward requires a unique JWT token.  
   // See the token generation step outlined below.
-  var jwt = "[token]";
+  var jwt = "[YOUR_UNIQUE_TOKEN]";
 
   reward.redeem(
     jwt,
@@ -104,6 +104,13 @@ In the ruby client, the tokenize call looks like the following:
   )
 ```
 
+### Create vs. Retrieve Reward
+
+Each JWT should be uniquely associated with a single reward in your system. For a fresh JWT which has not yet been redeemed, the embed client `reward` call will initiate a new redemption flow.
+
+When an existing JWT is detected (a completed redemption already exists for this token), the embed client will instead open the redemption details view on the `reward` call so that your end-user can retrieve their historical information (i.e. what is the gift card code or the bank account to which I sent my funds).
+
+
 ### config
 
 | Property  | Required  | Type        | Description |
@@ -130,4 +137,4 @@ Triggered when the user manually closes the client.
 
 ## REST API Integration
 
-At minimum, the embedded SDK does not require any integration with the GiftRocket REST API.  However, an integration may be helpful for fetching historical orders, adding webhooks, etc.  To learn more, [view the REST documentation](https://www.giftrocket.com/docs).
+At minimum, the embedded SDK does not require any integration with the GiftRocket REST API.  However, an integration may be helpful for fetching historical orders, adding webhooks, etc.  To learn more, [(view the REST documentation)](https://www.giftrocket.com/docs).
