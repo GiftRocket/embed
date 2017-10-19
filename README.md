@@ -88,11 +88,11 @@ In the ruby client, the tokenize call looks like the following:
   require 'jwt'
 
   payload = {
-    amount: 50, // Required: an integer for your denomination
-    external_id: "[UUID]",  // Required: unique string for your reward as stored in your system
+    amount: 50, # Required: an integer for your denomination
+    external_id: "[UUID]",  # Required: unique string for your reward as stored in your system
     recipient: {
-      name: "[RECIPIENT_NAME]",  // Optional: string
-      email: "[RECIPIENT_EMAIL]",  // Optional: string
+      name: "[RECIPIENT_NAME]",  # Optional: string
+      email: "[RECIPIENT_EMAIL]",  # Optional: string
     }
   }
 
@@ -100,7 +100,7 @@ In the ruby client, the tokenize call looks like the following:
   token = JWT.encode(
     payload,
     "[GIFTROCKET_SANDBOX_PRIVATE_KEY]",
-    'HS256'  // Cryptographically sign with HS256 - HMAC using SHA-256 hash algorithm
+    'HS256'  # Cryptographically sign with HS256 - HMAC using SHA-256 hash algorithm
   )
 ```
 
