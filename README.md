@@ -21,7 +21,7 @@ You can get started immediately with your integration using our sandbox environm
 #### Add the client script to your webpage
 
 ```html
-<script type="text/javascript" src="https://cdn.giftrocket.com/embed/v1/client.js" />
+<script type="text/javascript" src="https://cdn.giftrocket.com/embed/v1/sdk.js" />
 ```
 
 #### Launch the rewards modal
