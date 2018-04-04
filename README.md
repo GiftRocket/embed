@@ -5,7 +5,7 @@ Add flexible payouts to your application with a few lines of javascript.
 
 ### Overview
 
-The Embed client SDK is the easiest way to add rewards and incentives to your product, while maintaining full control of your user experience.  
+The Embed client SDK is the easiest way to add rewards and incentives to your product, while maintaining control of your user experience.  
 
 Within your application, end-users are presented with a white-labeled interface wherein they can choose to receive funds from among a wide set of options. This payout set includes <b>direct bank deposit (ACH), PayPal, Visa prepaid cards, and popular brand gift cards</b>. This catalog is programmatically configurable through the client SDK.
 
@@ -82,13 +82,14 @@ Each redeem call must include a unique JWT (json web token).  This guarantees id
 
 You should create a JWT in your backend and pass it to the `reward` method as the first paramter.  Our Ruby, Python, and Node client libraries each contain a tokenize function which will create the JWT for you. For all other languages, you can find a JWT library at [https://jwt.io](https://jwt.io). 
 
-In the ruby client, the tokenize call looks like the following:
+Using the Ruby JWT libray, the tokenize call looks like the following:
 
 ```ruby
   require 'jwt'
 
   payload = {
     amount: 50, # Required: an integer for your denomination
+    currency_code: "USD", # Optional (defaults to USD)
     external_id: "[UUID]",  # Required: unique string for your reward as stored in your system
     recipient: {
       name: "[RECIPIENT_NAME]",  # Optional: string
